@@ -10,6 +10,22 @@ A simple Go HTTP server with Docker and docker-compose setup, including PostgreS
 - Docker Compose (included with Docker Desktop)
 - Go 1.21+ (optional, for local development)
 
+### Setup Environment Variables
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` to customize credentials (optional). The file is git-ignored and will not be committed:
+
+```bash
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=myapp
+```
+
 ## Building
 
 ### Build the Docker Image
@@ -144,6 +160,9 @@ go-hello/
 ├── go.mod               # Go module definition
 ├── Dockerfile           # Multi-stage Docker build
 ├── docker-compose.yml   # Service orchestration (go-hello, postgres, redis)
+├── .env.example         # Environment variables template (commit to repository)
+├── .env                 # Local environment variables (git-ignored, do not commit)
+├── .gitignore           # Git ignore rules
 └── README.md            # This file
 ```
 
@@ -186,9 +205,20 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 - Ensure all containers are on the same network: `docker network ls`
 - Verify DNS: `docker compose exec go-hello nslookup postgres`
 
+## Security
+
+- **`.env` file**: Contains actual credentials for local development. Git-ignored and never committed.
+- **`.env.example`**: Template showing required variables without sensitive values. Safe to commit.
+- **Environment Variables**: All credentials are loaded from `.env` at runtime, not hardcoded in docker-compose.yml.
+
+When deploying to production, use your deployment platform's secret management (e.g., GitHub Secrets, AWS Secrets Manager).
+
 ## Notes
 
 - The Dockerfile uses Alpine Linux (minimal, secure base image)
 - `CGO_ENABLED=0` ensures the binary doesn't depend on system C libraries
 - Health checks prevent go-hello from starting before databases are ready
 - Volumes persist PostgreSQL data across container restarts
+- Environment variables are loaded from `.env` file automatically by docker-compose
+- Volumes persist PostgreSQL data across container restarts
+- Environment variables are loaded from `.env` file automatically by docker-compose
