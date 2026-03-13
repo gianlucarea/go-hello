@@ -1,6 +1,6 @@
 # go-hello
 
-A simple Go HTTP server with Docker and docker-compose setup, including PostgreSQL and Redis services.
+A Go HTTP server with /health and /hello endpoints, containerized with Docker and composed with PostgreSQL and Redis.
 
 ## Quick Start
 
@@ -86,7 +86,11 @@ docker compose down -v
 
 - **Image**: Built from local Dockerfile
 - **Port**: `8080`
-- **Purpose**: HTTP server that responds with "Hello World"
+- **Purpose**: HTTP server with health check and greeting endpoints
+- **Endpoints**:
+  - `GET /hello` — Returns "Hello World from Go!"
+  - `GET /health` — Returns JSON health status
+  - `GET /` — Alias for /hello
 - **Environment Variables**:
   - `DB_HOST=postgres` — PostgreSQL hostname
   - `DB_PORT=5432` — PostgreSQL port
@@ -120,7 +124,13 @@ docker compose down -v
 All services are on the same Docker network (`app-network`) and can reach each other by hostname:
 
 ```bash
-# Test go-hello
+# Test /hello endpoint
+curl http://localhost:8080/hello
+
+# Test /health endpoint
+curl http://localhost:8080/health
+
+# Test health check (default route)
 curl http://localhost:8080
 
 # Test PostgreSQL
@@ -131,6 +141,16 @@ docker compose exec redis redis-cli ping
 ```
 
 ## Pushing to Docker Hub
+
+Pull the pre-built image from Docker Hub:
+
+```bash
+docker pull aldino97/go-hello
+```
+
+View on Docker Hub: [aldino97/go-hello](https://hub.docker.com/r/aldino97/go-hello)
+
+Or build and push your own:
 
 Tag the image with your Docker Hub username:
 
@@ -146,15 +166,14 @@ docker push yourusername/go-hello
 ```
 
 For this project, the image is pushed to:
-```
 
+```bash
 docker push aldino97/go-hello
 ```
 
 ## Project Structure
 
-```
-
+```text
 go-hello/
 ├── main.go              # Go HTTP server source code
 ├── go.mod               # Go module definition
@@ -178,11 +197,16 @@ Server starts on `localhost:8080`
 
 ### Modify the Server
 
-Edit [main.go](main.go) to change the HTTP handler or add routes:
+Edit [main.go](main.go) to add or change endpoints:
 
 ```go
 func helloHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "Hello World from Go!\n")
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{"status": "healthy"})
 }
 ```
 
@@ -210,15 +234,15 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 - **`.env` file**: Contains actual credentials for local development. Git-ignored and never committed.
 - **`.env.example`**: Template showing required variables without sensitive values. Safe to commit.
 - **Environment Variables**: All credentials are loaded from `.env` at runtime, not hardcoded in docker-compose.yml.
+- **Image Vulnerabilities**: Uses Go 1.25 and Alpine 3.21 to minimize CVEs. Current scan shows **0 CRITICAL, 0 HIGH** vulnerabilities (down from 3 CRITICAL, 17 HIGH with older versions).
 
 When deploying to production, use your deployment platform's secret management (e.g., GitHub Secrets, AWS Secrets Manager).
 
 ## Notes
 
-- The Dockerfile uses Alpine Linux (minimal, secure base image)
+- The Dockerfile uses Alpine Linux 3.21 (minimal, secure base image)
+- Go 1.25 (latest stable) with all security patches
 - `CGO_ENABLED=0` ensures the binary doesn't depend on system C libraries
 - Health checks prevent go-hello from starting before databases are ready
-- Volumes persist PostgreSQL data across container restarts
-- Environment variables are loaded from `.env` file automatically by docker-compose
 - Volumes persist PostgreSQL data across container restarts
 - Environment variables are loaded from `.env` file automatically by docker-compose
