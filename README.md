@@ -1,5 +1,7 @@
 # go-hello
 
+[![CI](https://github.com/gianlucarea/go-hello/actions/workflows/ci.yml/badge.svg)](https://github.com/gianlucarea/go-hello/actions/workflows/ci.yml)
+
 A Go HTTP server with /health and /hello endpoints, containerized with Docker and composed with PostgreSQL and Redis.
 
 ## Quick Start
@@ -82,7 +84,7 @@ docker compose down -v
 
 ## Services
 
-### go-hello
+### The Application
 
 - **Image**: Built from local Dockerfile
 - **Port**: `8080`
